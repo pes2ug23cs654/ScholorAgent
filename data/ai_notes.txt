@@ -1,0 +1,9 @@
+RAG stands for Retrieval Augmented Generation.
+
+Embeddings convert text into vectors.
+
+Vector databases store embeddings and allow similarity search.
+
+Langchain is a framework for building LLM applications.
+
+Chunking divides large documents into smaller pieces for retrieval.
