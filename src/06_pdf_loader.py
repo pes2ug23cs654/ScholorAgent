@@ -26,10 +26,31 @@ chunks = [
         chunk_size
     )
 ]
+try:
+    client.delete_collection("Documents")
+except:
+    pass
 
-documents = chunks
-collection = client.create_collection(name="Documents")
-collection.add(documents=documents, ids=[f"doc{i}" for i in range(len(documents))])
+collection = client.create_collection(
+    name="Documents"
+)
+metadatas = []
+
+for i, chunk_size in enumerate(chunks):
+    metadatas.append(
+        {
+            "source": "attention_is_all_you_need.pdf",
+            "chunk": i,
+        }
+    )
+collection.add(
+    documents=chunks,
+    ids=[
+         f"Attention_chunk{i}"
+         for i in range(len(chunks))
+        ],
+    metadatas=metadatas
+)
 query = input("\nAsk a question:\n")
 results = collection.query(
     query_texts=[query],
@@ -37,7 +58,7 @@ results = collection.query(
 )
 
 print("Retrieved Documents:")
-print(results["documents"])
+print(results["metadatas"])
 
 context = "\n".join(
     results["documents"][0] 
@@ -46,7 +67,13 @@ client1 = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
 prompt = f"""
-Answer using only the context below.
+You are a research assistant.
+
+Answer the question only using the provided context.
+
+If the answer cannot be found in the context,
+say:
+"I could not find the answer in the provided context."
 
 Context:
 {context}
@@ -61,3 +88,6 @@ response = client1.models.generate_content(
 )
 
 print("\nAnswer:\n",response.text)
+print("\nSources:")
+for metadata in results["metadatas"][0]:
+    print(metadata)
