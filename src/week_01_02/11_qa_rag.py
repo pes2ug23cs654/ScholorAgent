@@ -1,24 +1,8 @@
-import os 
 from langchain_community.document_loaders import PyPDFLoader
 
-documents = []
+loader = PyPDFLoader("data/attention_is_all_you_need.pdf")
 
-folder_path = "data/"
-
-for file in os.listdir(folder_path):
-    
-    if file.endswith(".pdf"):
-        loader = PyPDFLoader(
-            os.path.join(folder_path,file)
-        )
-        
-        docs = loader.load()
-        
-        documents.extend(docs)
-
-print(
-    "Total Pages: ",len(documents)
-)
+documents = loader.load()
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -27,23 +11,25 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=100
 )
 
-chunks = splitter.split_documents(documents)
+chunks = splitter.split_documents(
+    documents
+)
 
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 embeddings = HuggingFaceEmbeddings(
-    model_name="all-MiniLM-L6-v2"
+    model_name = "all-MiniLM-L6-v2"
 )
 
 from langchain_chroma import Chroma
 
 vectorstore = Chroma.from_documents(
     documents=chunks,
-    embedding=embeddings    
+    embedding=embeddings
 )
 
 retriever = vectorstore.as_retriever(
-    search_kwargs={"k": 3}
+    search_kwargs={"k":3}
 )
 
 from google import genai
@@ -100,4 +86,3 @@ for doc in docs:
         f"Source: {doc.metadata.get('source')}"
     )
 
-        
