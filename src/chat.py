@@ -4,6 +4,9 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from google import genai
 from dotenv import load_dotenv
 
+def retrieve(query):
+    docs = retriever.invoke(query)
+    return docs
 
 if not os.path.exists("chroma_db"):
     print("Vector Database not found. Please run 'index_documents.py' first to create the vector database.")
@@ -32,7 +35,11 @@ print(
 )
 
 retriever = vectorstore.as_retriever(
-    search_kwargs={"k": 3}
+   search_type="mmr", #Maximal Marginal Relevance
+   search_kwargs={
+       "k":5,
+       "fetch_k":10
+   }
 )
 
 
@@ -51,7 +58,7 @@ while True:
     if query.lower() in ["exit", "quit"]:
         print("Exiting...")
         break
-    docs = retriever.invoke(query)
+    docs = retrieve(query)
 
     print("\nRetrieved Chunks:\n")
 
@@ -118,8 +125,7 @@ while True:
 
     print("\nSources:")
 
-    for source, page in sources:
-        print(f"{source} (Page {page})")
+    for i,(source,page) in enumerate(sources, start=1):
+        print(f"({i}). {source} (Page {page})")
     
 
-        
