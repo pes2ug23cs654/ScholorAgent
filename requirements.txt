@@ -1,0 +1,37 @@
+# LLM
+google-genai
+
+# LangChain
+langchain
+langchain-community
+langchain-core
+langchain-text-splitters
+langchain-chroma
+
+# Vector Database
+chromadb
+
+# Embeddings
+sentence-transformers
+huggingface-hub
+
+# PDF Loading
+pypdf
+
+# Environment Variables
+python-dotenv
+
+# Tokenizer
+tiktoken
+
+# Web Search
+duckduckgo-search
+
+# HTTP Requests
+requests
+
+# Numerical Computing
+numpy
+
+# Data Handling
+pandas
