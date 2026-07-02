@@ -9,7 +9,7 @@ from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 from tools.web_search import web_search
-
+from utils.router import choose_tool
 load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
@@ -62,26 +62,17 @@ print("Type 'exit' to quit.")
 print("=" * 60)
 
 while True:
-    choice = input(
-    "Choose Search Mode:\n"
-    "1. Web Search\n"
-    "2. Local PDF Search\n\n"
-    "Enter choice: "
-)
-    if choice == "1":
-        results = web_search(query = input("\nYou: "))
-        print(results)
-
-
-    elif choice != "2":
-        print("Invalid choice.")
-        sys.exit()
-
-    query = input("\nYou: ").strip()
-
+    query = input("\nYou: ")
     if query.lower() in ["exit", "quit"]:
         print("Exiting ScholarAgent...")
         break
+    tool = choose_tool(query)
+    print(f"\nUsing tool: {tool}")
+    if tool == "web":
+        result = web_search(query)
+        print(result)
+        continue
+    
 
     docs = retrieve(query)
 
