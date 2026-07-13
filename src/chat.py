@@ -2,141 +2,141 @@ import os
 import sys
 import time
 
-from dotenv import load_dotenv
-from google import genai
-
-from langchain_chroma import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-
-from tools.web_search import web_search
+from utils.tools_registry import TOOLS
 from utils.router import choose_tool
-load_dotenv()
+from utils.prompt import build_prompt
+from utils.llm import ask_llm
+from utils.formatter import print_sources
+from utils.query_rewritter import rewrite_query
 
-api_key = os.getenv("GEMINI_API_KEY")
 
-if not api_key:
-    print("GEMINI_API_KEY not found in .env file.")
-    sys.exit()
-
-client = genai.Client(api_key=api_key)
+# -------------------------------------------------
+# Verify Vector Database
+# -------------------------------------------------
 
 if not os.path.exists("chroma_db"):
-    print("Vector Database not found.")
+    print("❌ Vector Database not found.")
     print("Please run 'index_documents.py' first.")
     sys.exit()
 
-start = time.time()
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="all-MiniLM-L6-v2"
-)
-
-vectorstore = Chroma(
-    persist_directory="chroma_db",
-    embedding_function=embeddings
-)
-
-collection = vectorstore.get()
-
-print(f"Indexed Chunks: {len(collection['ids'])}")
-print(f"Database loaded in {time.time() - start:.2f} sec")
-
-
-retriever = vectorstore.as_retriever(
-    search_type="mmr",
-    search_kwargs={
-        "k": 5,
-        "fetch_k": 10
-    }
-)
-
-
-def retrieve(query):
-    return retriever.invoke(query)
-
-
+# -------------------------------------------------
+# Banner
+# -------------------------------------------------
 
 print("=" * 60)
 print("📚 ScholarAgent - Research Paper Assistant")
 print("Type 'exit' to quit.")
 print("=" * 60)
 
+
+# -------------------------------------------------
+# Main Chat Loop
+# -------------------------------------------------
+
 while True:
-    query = input("\nYou: ")
+
+    query = input("\nYou: ").strip()
+
     if query.lower() in ["exit", "quit"]:
-        print("Exiting ScholarAgent...")
+        print("\n👋 Exiting ScholarAgent...")
         break
-    tool = choose_tool(query)
-    print(f"\nUsing tool: {tool}")
-    if tool == "web":
-        result = web_search(query)
-        print(result)
-        continue
-    
 
-    docs = retrieve(query)
-
-    if not docs:
-        print("\nNo relevant documents found.")
-        continue
-
-    print("\nRetrieved Chunks:\n")
-
-    for i, doc in enumerate(docs, start=1):
-        print(f"\nChunk {i}")
-        print("-" * 50)
-        print(doc.page_content[:300])
-        print(
-            f"Page: {doc.metadata.get('page')} | "
-            f"Source: {doc.metadata.get('source')}"
-        )
-
-    context = "\n\n".join(
-        doc.page_content for doc in docs
-    )
-
-    prompt = f"""
-You are ScholarAgent, an AI Research Assistant.
-
-Rules:
-1. Use ONLY the retrieved context.
-2. Never fabricate information.
-3. If the context is insufficient, clearly say so.
-4. Explain concepts in beginner-friendly language.
-5. Use bullet points.
-6. Give examples whenever appropriate.
-7. End with a short summary.
-
-Context:
-{context}
-
-Question:
-{query}
-"""
+    overall_start = time.time()
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
+         # -------------------------------
+        # Route Query
+        # -------------------------------
+
+        print("\n🧠 Selecting tool...")
+
+        tool = choose_tool(query)
+
+        print(f"Using Tool: {tool}")
+        # -------------------------------
+        # Rewrite Query
+        # -------------------------------
+
+        print("\n🔄 Optimizing query...")
+        rewritten_query = rewrite_query(query,tool)
+
+        print(f"Search Query: {rewritten_query}")
+
+       
+
+        # -------------------------------
+        # Fetch Tool
+        # -------------------------------
+
+        tool_function = TOOLS.get(tool)
+
+        if tool_function is None:
+            print(f"\n❌ Tool '{tool}' not found.")
+            continue
+
+        # -------------------------------
+        # Execute Tool
+        # -------------------------------
+
+        print(f"\n🔍 Running {tool} search...")
+
+        result = tool_function(rewritten_query)
+
+        context = result.get("context", "")
+        sources = result.get("sources", [])
+
+        if not context.strip():
+            print("\n⚠️ No relevant information found.")
+            continue
+
+        # -------------------------------
+        # Tool Summary
+        # -------------------------------
+
+        print("\n========== TOOL SUMMARY ==========")
+        print(f"Tool            : {result.get('tool')}")
+        print(f"Sources         : {len(sources)}")
+        print(f"Context Length  : {len(context)} characters")
+        print(f"Execution Time  : {result.get('execution_time', 0):.2f}s")
+        print("==================================")
+
+        # -------------------------------
+        # Build Prompt
+        # -------------------------------
+
+        print("\n📝 Building prompt...")
+
+        prompt = build_prompt(context, rewritten_query)
+
+        # Uncomment for debugging
+        # print(prompt)
+
+        # -------------------------------
+        # Ask LLM
+        # -------------------------------
+
+        print("\n🤖 Generating answer...")
+
+        answer = ask_llm(prompt)
+
+        # -------------------------------
+        # Display Response
+        # -------------------------------
 
         print("\nAssistant:\n")
-        print(response.text)
+        print(answer)
+
+        print_sources(sources)
+
+        print(
+            f"\n⏱️ Total Pipeline Time: "
+            f"{time.time() - overall_start:.2f} seconds"
+        )
+
+    except KeyboardInterrupt:
+        print("\n\nInterrupted by user.")
+        break
 
     except Exception as e:
-        print("\nError generating response:")
-        print(e)
-        continue
-
-    sources = {
-        (
-            os.path.basename(doc.metadata["source"]),
-            doc.metadata["page"]
-        )
-        for doc in docs
-    }
-
-    print("\nSources:")
-
-    for i, (source, page) in enumerate(sorted(sources), start=1):
-        print(f"({i}) {source} (Page {page})")
+        print(f"\n❌ {type(e).__name__}: {e}")

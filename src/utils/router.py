@@ -27,10 +27,19 @@ def choose_tool(query):
     -Recent information
     -Today's updates
     
+    3.arxiv
+    Use for:
+    -Research papers
+    -Academic publications
+    -Paper Recommendations
+    -Scientific literature
+    
     Return only one word.
     pdf 
     or 
     web
+    or
+    arxiv
     Question:
     {query}
     """
