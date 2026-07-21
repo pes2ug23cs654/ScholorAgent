@@ -12,13 +12,12 @@ def choose_tool(query):
     prompt = f"""
     You are a routing assistant.
     
-    You have two tools:
+    You have three tools:
     
     1.pdf
     Use for:
-    -Research Papers
-    -AI concepts
-    -Questions answerable from local doucments
+   - Questions answerable from my local documents 
+   - Existing indexed PDFs
     
     2.Web
     Use for:
