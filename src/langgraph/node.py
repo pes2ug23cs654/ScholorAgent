@@ -6,87 +6,81 @@ from src.utils.query_rewritter import rewrite_arxiv_query
 from src.utils.llm import ask_llm
 from src.utils.context_evaluator import evaluate_context
 from src.utils.paper_classifier import classify_paper
+from src.utils.memory import (
+    load_history,
+    save_history,
+    trim_history
+)
+from src.utils.state_helper import update_state
+
 def rewrite_node(state):
+
+    # Step 1: Resolve conversational references
+    standalone_query = rewrite_query(
+        state["query"],
+        state["chat_history"]
+    )
+
+    # Step 2: Convert to arXiv keywords if needed
     if state["query_type"] == "paper":
-        state["rewritten_query"] = rewrite_arxiv_query(state["query"])
+        state["rewritten_query"] = rewrite_arxiv_query(
+            standalone_query
+        )
     else:
-        state["rewritten_query"] = rewrite_query(state["query"])
+        state["rewritten_query"] = standalone_query
 
     print(f"✓ {state['rewritten_query']}")
-    return state
 
-def router_node(state):
-    state["tool"] = choose_tool(state["rewritten_query"])
-    print(f"✓ Tool Selected: {state['tool']}")
     return state
 
 def knowledge_search_node(state):
     result = TOOLS["pdf"](
         state["rewritten_query"]
     )
-    state["context"]=result["context"]
-    state["sources"]=result["sources"]
+    state = update_state(state, result)
     print(f"✓ Retrieved {len(state['sources'])} sources")
     return state
-def remove_duplicates(sources):
-
-    seen = set()
-    unique = []
-
-    for source in sources:
-
-        key = source["url"]
-
-        if key not in seen:
-            seen.add(key)
-            unique.append(source)
-
-    return unique
 
 def web_node(state):
-
-    pdf_context = state.get("context", "")
-    pdf_sources = state.get("sources", [])
-
     result = TOOLS["web"](state["rewritten_query"])
-
-    state["context"] = f"""
-========== LOCAL DOCUMENTS ==========
-{pdf_context}
-
-========== WEB SEARCH ==========
-{result["context"]}
-"""
-
-    state["sources"] = remove_duplicates(
-        pdf_sources + result["sources"]
-    )
-
     print(f"✓ Retrieved {len(result['sources'])} web sources")
+    return update_state(state, result,merge=True)
 
-    return state
 
 def arxiv_node(state):
-    query = rewrite_arxiv_query(state["query"])
     result = TOOLS["arxiv"](
-        query
+        state["rewritten_query"]
     )
-    state["context"]=result["context"]
-    state["sources"]=result["sources"]
+    state = update_state(state, result)
     print(f"✓ Retrieved {len(state['sources'])} papers")
     return state
 
 def answer_node(state):
+    if not state["context"]:
+            state["answer"] = (
+            "I couldn't retrieve information from my knowledge sources. "
+            "Please try again later or rephrase your question."
+            )
+            return state
     prompt = build_prompt(
         state["context"],
-        state["query"]
+        state["query"],
+        chat_history = state["chat_history"]
     )
     state["answer"]=ask_llm(prompt)
+    history = load_history(state)
+    history.append(
+        ("User", state["query"]),
+    )
+    history.append(
+        ("Assistant", state["answer"])
+    )
+    history = trim_history(history)
+    save_history(state, history)
+    print(f"💾 Memory Updated ({len(history)} messages)")
     print("✓ Response generated")
     return state
 
-def route(state):
-    return state["tool"]
 
 def check_context(state):
 
@@ -122,3 +116,14 @@ def evaluate_context_node(state):
         print("⚠ Context insufficient")
 
     return state
+
+def memory_node(state):
+    print("\n💾 Memory Management")
+
+    history = load_history(state)
+    state["chat_history"] = history
+
+    print(f"✓ Loaded {len(history)} chat history entries")
+
+    return state
+

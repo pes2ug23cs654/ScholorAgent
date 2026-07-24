@@ -2,7 +2,7 @@ from langgraph.graph import StateGraph
 from langgraph.graph import START, END
 
 from src.langgraph.state import GraphState
-
+from utils.source_formatter import format_sources
 from src.langgraph.node import (
     paper_request_node,
     rewrite_node,
@@ -12,7 +12,8 @@ from src.langgraph.node import (
     answer_node,
     evaluate_context_node,
     check_query_type,
-    check_context
+    check_context,
+    memory_node
 )
 
 graph = StateGraph(GraphState)
@@ -23,9 +24,13 @@ graph.add_node("evaluate_context", evaluate_context_node)
 graph.add_node("web", web_node)
 graph.add_node("arxiv", arxiv_node)
 graph.add_node("answer", answer_node)
-
+graph.add_node("memory",memory_node)
 graph.add_edge(
     START,
+    "memory"
+)
+graph.add_edge(
+    "memory",
     "paper_request"
 )
 
@@ -74,16 +79,25 @@ graph.add_edge(
 
 app = graph.compile()
 
-result = app.invoke(
-    {
-        "query": input("You: ")
-    }
-)
+if __name__ == "__main__":
+    chat_history = []
+    while True:
 
-print("\n🤖 Assistant")
-print(result["answer"])
+        query = input("\nYou: ")
 
-print("\n📚 Sources")
+        if query.lower() in ["exit", "quit"]:
+            print("👋 Goodbye!")
+            break
 
-for source in result["sources"]:
-    print(f"- {source['title']} ({source['url']})")
+        result = app.invoke(
+            {
+                "query": query,
+                "chat_history": chat_history
+            }
+        )
+
+        print("\nAssistant:")
+        print(result["answer"])
+        chat_history = result["chat_history"]
+        print("\n📚 Sources")
+        print(format_sources(result["sources"]))

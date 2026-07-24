@@ -1,5 +1,5 @@
 import os
-
+from src.utils.config import MODEL
 from dotenv import load_dotenv
 from google import genai
 
@@ -12,7 +12,7 @@ client = genai.Client(
 
 def ask_llm(prompt):
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model = MODEL,
         contents=prompt
     )
 

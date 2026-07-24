@@ -1,3 +1,5 @@
+from time import time
+
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 
@@ -23,7 +25,19 @@ retriever = vectorstore.as_retriever(
 
 # Retrieve relevant documents
 def retrieve(query):
-    docs =  retriever.invoke(query)
+    start = time()
+    try:
+        docs =  retriever.invoke(query)
+    except Exception as e:
+        print(f"Error occurred while retrieving documents: {e}")
+        return {
+            "tool":"pdf",
+            "status":"failed",
+            "context": "",
+            "sources": [],
+            "execution_time": time.time() - start,
+            "error": str(e)
+        }
     context = "\n\n".join(
         doc.page_content for doc in docs
     )
@@ -34,9 +48,13 @@ def retrieve(query):
         }
         for doc in docs
     ]
+    execution_time = time.time() - start
     return {
         "tool":"pdf",
+        "status":"success",
         "context": context,
-        "sources": sources
+        "sources": sources,
+        "execution_time": execution_time
     }
+
     

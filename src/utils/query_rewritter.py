@@ -1,7 +1,7 @@
 from google import genai
 from dotenv import load_dotenv
 import os
-
+from src.utils.config import MODEL
 load_dotenv()
 
 client = genai.Client(
@@ -9,24 +9,41 @@ client = genai.Client(
 )
 
 
-def rewrite_query(query):
+def rewrite_query(query, chat_history):
+    history_text = ""
+
+    for role, message in chat_history:
+        history_text += f"{role}: {message}\n"
     prompt = f"""
-You improve search queries.
+You rewrite questions for a Retrieval-Augmented Generation (RAG) system.
 
-Rewrite the user's question so it is more specific and clear.
+Your goal is to convert follow-up questions into standalone questions.
 
-Rules:
-- Do not change the meaning.
-- Make it clearer.
-- Do not answer the question.
-- Return only the rewritten query.
+Previous Conversation
 
-User question:
+{history_text}
+
+Current Question
+
 {query}
+
+Instructions:
+- If the current question refers to previous messages using words like:
+  - it
+  - that
+  - they
+  - those papers
+  - the first one
+  - the second model
+  resolve the reference using the conversation history.
+- Produce a complete standalone question.
+- Do not answer the question.
+- Keep the original meaning.
+- Return ONLY the rewritten question.
 """
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model = MODEL,
         contents=prompt,
     )
 
@@ -73,7 +90,7 @@ Question:
 """
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model = MODEL,
         contents=prompt,
     )
 

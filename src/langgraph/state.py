@@ -8,3 +8,8 @@ class GraphState(TypedDict):
     answer:str
     sources:list
     need_web:bool
+    chat_history:list
+    last_tool: str
+    tool_status: str
+    execution_time: float
+    error: str

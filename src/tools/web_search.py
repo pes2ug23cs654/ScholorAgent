@@ -1,6 +1,6 @@
 import os
 import time
-
+from src.utils.config import TOP_K
 from dotenv import load_dotenv
 from tavily import TavilyClient
 
@@ -14,12 +14,21 @@ client = TavilyClient(
 def web_search(query):
 
     start = time.time()
-
-    response = client.search(
-        query=query,
-        search_depth="advanced",
-        max_results=5
-    )
+    try:
+        response = client.search(
+            query=query,
+            search_depth="advanced",
+            max_results=TOP_K
+        )
+    except Exception as e:
+        return {
+            "tool": "web",
+            "status": "failed",
+            "context": "",
+            "sources": [],
+            "execution_time": time.time() - start,
+            "error": str(e)
+        }
 
     context_parts = []
     sources = []
@@ -45,10 +54,11 @@ Source: {result['url']}
         })
 
     context = "\n\n".join(context_parts)
-
+    execution_time = time.time() - start
     return {
         "tool": "web",
+        "status": "success",
         "context": context,
         "sources": sources,
-        "execution_time": time.time() - start
+        "execution_time": execution_time
     }

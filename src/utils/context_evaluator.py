@@ -1,5 +1,6 @@
 from google import genai
 from dotenv import load_dotenv
+from src.utils.config import MODEL
 import os
 
 load_dotenv()
@@ -37,7 +38,7 @@ Do not explain.
 """
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model = MODEL,
         contents=prompt
     )
 

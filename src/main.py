@@ -6,7 +6,7 @@ from utils.tools_registry import TOOLS
 from utils.router import choose_tool
 from utils.prompt import build_prompt
 from utils.llm import ask_llm
-from utils.formatter import print_sources
+from utils.source_formatter import print_sources
 from utils.query_rewritter import rewrite_query
 
 

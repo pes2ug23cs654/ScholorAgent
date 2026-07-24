@@ -1,20 +1,26 @@
+import time
+
 import arxiv
 
+from src.utils.config import TOP_K
+
 def arxiv_search(query):
+    start = time.time()
     client = arxiv.Client()
     print(f"Searching arXiv for: {query}")
-    search = arxiv.Search(
-        query=query,
-        max_results=5,
-        sort_by=arxiv.SortCriterion.SubmittedDate
-    )
+    try:
+        search = arxiv.Search(
+            query=query,
+            max_results=TOP_K,
+            sort_by=arxiv.SortCriterion.SubmittedDate
+        )
+ 
+        context = ""
+        sources = []
 
-    context = ""
-    sources = []
+        for result in client.results(search):
 
-    for result in client.results(search):
-
-        context += f"""
+            context += f"""
 Title: {result.title}
 Authors: {', '.join(a.name for a in result.authors)}
 Published: {result.published.date()}
@@ -23,16 +29,26 @@ URL: {result.entry_id}
 
 """
 
-        sources.append({
+            sources.append({
             "url": result.entry_id,
             "title": result.title,
             "authors": [a.name for a in result.authors],
             "published": str(result.published.date()),
             "summary": result.summary.replace('\n', ' ')
         })
-
+    except Exception as e:
+         return {
+                "tool": "arxiv",
+                "status": "failed",
+                "context": "",
+                "sources": [],
+                "execution_time": time.time() - start,
+                "error": str(e)
+            }
     return {
         "tool": "arxiv",
+        "status": "success",
         "context": context,
-        "sources": sources
+        "sources": sources,
+        "execution_time": time.time() - start
     }
