@@ -19,12 +19,13 @@ def arxiv_search(query):
         sources = []
 
         for result in client.results(search):
+            summary = result.summary.replace("\n", " ")
 
             context += f"""
 Title: {result.title}
 Authors: {', '.join(a.name for a in result.authors)}
 Published: {result.published.date()}
-Summary: {result.summary.replace('\n', ' ')[:250]}...
+Summary: {summary[:400]}
 URL: {result.entry_id}
 
 """
@@ -34,7 +35,7 @@ URL: {result.entry_id}
             "title": result.title,
             "authors": [a.name for a in result.authors],
             "published": str(result.published.date()),
-            "summary": result.summary.replace('\n', ' ')
+            "summary": summary
         })
     except Exception as e:
          return {
