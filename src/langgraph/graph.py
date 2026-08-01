@@ -2,7 +2,7 @@ from langgraph.graph import StateGraph
 from langgraph.graph import START, END
 
 from src.langgraph.state import GraphState
-from utils.source_formatter import format_sources
+from src.utils.source_formatter import format_sources
 from src.langgraph.node import (
     paper_request_node,
     rewrite_node,

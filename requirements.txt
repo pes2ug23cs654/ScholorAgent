@@ -1,37 +1,35 @@
-# LLM
-google-genai
+streamlit==1.60.0
 
-# LangChain
-langchain
-langchain-community
-langchain-core
-langchain-text-splitters
-langchain-chroma
+google-genai==2.8.0
 
-# Vector Database
-chromadb
+langgraph==1.2.9
+langchain==1.3.13
+langchain-community==0.4.2
+langchain-core==1.4.9
+langchain-text-splitters==1.1.2
+langchain-chroma==1.1.0
+langchain-huggingface==1.2.2
 
-# Embeddings
-sentence-transformers
-huggingface-hub
+chromadb==1.5.9
 
-# PDF Loading
-pypdf
+sentence-transformers==5.5.1
 
-# Environment Variables
-python-dotenv
+huggingface_hub==1.18.0
 
-# Tokenizer
-tiktoken
+transformers==5.10.2
+torch==2.12.0
 
-# Web Search
-duckduckgo-search
+pypdf==6.13.2
 
-# HTTP Requests
-requests
+python-dotenv==1.2.2
 
-# Numerical Computing
-numpy
+tiktoken==0.13.0
 
-# Data Handling
-pandas
+numpy==2.4.6
+pandas==3.0.5
+
+requests==2.33.1
+
+tavily-python==0.7.26
+
+arxiv==4.0.0

@@ -1,4 +1,4 @@
-from time import time
+import time
 
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -25,7 +25,7 @@ retriever = vectorstore.as_retriever(
 
 # Retrieve relevant documents
 def retrieve(query):
-    start = time()
+    start = time.time()
     try:
         docs =  retriever.invoke(query)
     except Exception as e:
@@ -44,7 +44,7 @@ def retrieve(query):
     sources = [
         {
             "title": doc.metadata.get("source"),
-            "url": f"Page {doc.metadata.get('page', 'Unknown')}"
+            "url": None
         }
         for doc in docs
     ]

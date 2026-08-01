@@ -28,7 +28,7 @@ def rewrite_node(state):
         )
     else:
         state["rewritten_query"] = standalone_query
-
+    state["execution_steps"].append("✏️ Query Rewriting")
     print(f"✓ {state['rewritten_query']}")
 
     return state
@@ -79,6 +79,7 @@ def answer_node(state):
     save_history(state, history)
     print(f"💾 Memory Updated ({len(history)} messages)")
     print("✓ Response generated")
+    state["execution_steps"].append("🤖 Answer Generation")
     return state
 
 
@@ -114,12 +115,12 @@ def evaluate_context_node(state):
     else:
         state["need_web"] = True
         print("⚠ Context insufficient")
-
+    state["execution_steps"].append("🧠 Context Evaluation")
     return state
 
 def memory_node(state):
     print("\n💾 Memory Management")
-
+    state["execution_steps"] = ["💬 Conversation Memory"]
     history = load_history(state)
     state["chat_history"] = history
 
