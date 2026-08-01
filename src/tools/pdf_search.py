@@ -44,6 +44,7 @@ def retrieve(query):
     sources = [
         {
             "title": doc.metadata.get("source"),
+            "page": doc.metadata.get("page", "Unknown"),
             "url": None
         }
         for doc in docs

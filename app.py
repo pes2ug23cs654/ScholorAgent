@@ -295,6 +295,7 @@ if query:
 
                     title = source.get("title", "Unknown Source")
                     url = source.get("url", "")
+                    page = source.get("page", "Unkown")
                     if url:
                         st.markdown(
                             f"""
@@ -304,6 +305,7 @@ if query:
                             """,
                             unsafe_allow_html=True
                         )
+                        
                     else:
                        st.markdown(
                             f"📄 **{title}** &nbsp;&nbsp;<span style='color:gray;'>Page {page}</span>",
