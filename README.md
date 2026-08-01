@@ -296,9 +296,9 @@ Explain LangGraph
 ![alt text](image-2.png)
 ![alt text](image-3.png)
 ![alt text](image-4.png)
-<video controls src="20260801-1641-34.6420438.mp4" title="Title"></video>
 ---
-
+## 🚀 Live Demo
+https://scholoragent.streamlit.app/
 # 🔮 Future Improvements
 
 - 🎨 Streamlit Chat Interface
