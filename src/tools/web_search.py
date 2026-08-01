@@ -3,13 +3,13 @@ import time
 from src.utils.config import TOP_K
 from dotenv import load_dotenv
 from tavily import TavilyClient
-
+import streamlit as st
 load_dotenv()
 
-client = TavilyClient(
-    api_key=os.getenv("TAVILY_API_KEY")
-)
+api_key = os.getenv("TAVILY_API_KEY")
 
+if not api_key:
+    api_key = st.secrets["TAVILY_API_KEY"]
 
 def web_search(query):
 
